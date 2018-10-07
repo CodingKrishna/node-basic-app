@@ -1,20 +1,50 @@
 // include http module in the file
 var http = require('http');
 var fs = require('fs');
+var url = require('url');
+const { parse } = require('querystring');
 
 // create a server
 http.createServer(function (req, res) {
     console.log('req.url', req.url);
-    if (req.url === '/home.html') {
+    var reqResource = req.url.split("?")[0];
+    if (reqResource === '/home.html') {
         console.log('req.url.substring(1)', req.url.substring(1));
-        fs.readFile('./src/http/'+req.url.substring(1),
+        fs.readFile('./'+req.url.substring(1),
             function(err, data) {
                 if (err) throw err;
                 res.writeHead(200);
-                res.write(data.toString('utf8'));
-                return res.end();
+                return res.end(data.toString('utf8'));
         });
-    } else {
+    } else if (reqResource === '/userForm.html') {
+        console.log('req.url.substring(1)', req.url.substring(1));
+        fs.readFile('./'+req.url.substring(1),
+            function(err, data) {
+                if (err) throw err;
+                res.writeHead(200);
+                return res.end(data.toString('utf8'));
+        });
+    } else if (reqResource === '/createUser') {
+        console.log('[HK] inside ')
+        console.log('req.url.substring(1)', req.url.substring(1));
+        var queryData = url.parse(req.url, true).query;
+        console.log('queryData>>', queryData);
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        return res.end(JSON.stringify(queryData));
+
+    } else if (reqResource === '/updateUser') {
+       let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            console.log(
+                parse(body)
+            );
+            res.writeHead(200, {'Content-Type': 'application/json'});
+            return res.end(JSON.stringify(body));
+        });
+    }  else {
         // http header
         // 200 - is the OK message
         // to respond with html content, 'Content-Type' should be 'text/html'
